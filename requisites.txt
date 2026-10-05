@@ -1,0 +1,14 @@
+I need a scoreboard
+Flutter...
+
+Androind
+Chromebook
+Inline hockey
+Time clearly visible
+Time configurable
+Penalties configurable, numer of player, penalty Time
+easy to start stop time, 
+easy to clar Penaltie
+goa tracking, 
+horn for local team
+configurable teams name and logo
