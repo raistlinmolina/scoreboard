@@ -159,14 +159,16 @@ class GameController extends ChangeNotifier {
   List<Penalty> _listFor(TeamSide side) =>
       side == TeamSide.home ? _homePenalties : _awayPenalties;
 
-  /// Adds a penalty for a team. Ignored if the team is already at the max.
-  void addPenalty(TeamSide side, String playerNumber, int minutes) {
+  /// Adds a penalty for a team, given a duration in SECONDS. Ignored if the
+  /// team is already at the max or the duration is non-positive.
+  void addPenalty(TeamSide side, String playerNumber, int seconds) {
     final list = _listFor(side);
     if (list.length >= _settings.maxPenaltiesPerTeam) return;
+    if (seconds <= 0) return;
     list.add(
       Penalty(
         playerNumber: playerNumber.trim().isEmpty ? '--' : playerNumber.trim(),
-        totalSeconds: minutes * 60,
+        totalSeconds: seconds,
       ),
     );
     notifyListeners();

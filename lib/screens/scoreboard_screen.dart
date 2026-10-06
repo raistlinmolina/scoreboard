@@ -33,7 +33,14 @@ class ScoreboardScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(flex: 4, child: _centerColumn(context)),
+                  // Center column grows with the clock font scale so a larger
+                  // scale gives the clock more room (and thus a bigger clock).
+                  Expanded(
+                    flex: (4 * controller.settings.clockFontScale)
+                        .round()
+                        .clamp(3, 12),
+                    child: _centerColumn(context),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     flex: 3,
@@ -83,20 +90,26 @@ class ScoreboardScreen extends StatelessWidget {
         ),
 
         // --- Big clock ---
+        // The clock auto-fits the available space. The center column's width
+        // (driven by clockFontScale in the parent Row) controls how big it is.
         Expanded(
           child: Center(
             child: GestureDetector(
               onTap: controller.startStop,
               child: FittedBox(
                 fit: BoxFit.contain,
-                child: Text(
-                  controller.clockDisplay,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontFamily: 'monospace',
-                    color: controller.isRunning
-                        ? Colors.greenAccent
-                        : Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    controller.clockDisplay,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontFamily: 'monospace',
+                      height: 1.0,
+                      color: controller.isRunning
+                          ? Colors.greenAccent
+                          : Colors.white,
+                    ),
                   ),
                 ),
               ),

@@ -29,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _homeName = TextEditingController(text: _draft.home.name);
     _awayName = TextEditingController(text: _draft.away.name);
     _presets = TextEditingController(
-      text: _draft.penaltyPresetsMinutes.join(', '),
+      text: _draft.penaltyPresetsSeconds.map(_fmtSeconds).join(', '),
     );
   }
 
@@ -64,16 +64,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  String _fmtSeconds(int s) =>
+      '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+
+  /// Parses a comma/space separated list of durations into seconds. Each entry
+  /// may be "m:ss" (e.g. "1:30") or a plain number of seconds.
   List<int> _parsePresets(String text) {
     final parts = text
         .split(RegExp(r'[,\s]+'))
         .where((s) => s.trim().isNotEmpty);
     final out = <int>[];
     for (final p in parts) {
-      final v = int.tryParse(p.trim());
-      if (v != null && v > 0 && v <= 99) out.add(v);
+      final t = p.trim();
+      int? secs;
+      if (t.contains(':')) {
+        final seg = t.split(':');
+        if (seg.length == 2) {
+          final m = int.tryParse(seg[0].trim());
+          final s = int.tryParse(seg[1].trim());
+          if (m != null && s != null && s >= 0 && s <= 59 && m >= 0) {
+            secs = m * 60 + s;
+          }
+        }
+      } else {
+        secs = int.tryParse(t);
+      }
+      if (secs != null && secs > 0 && secs <= 3600) out.add(secs);
     }
-    return out.isEmpty ? const [2, 3, 5] : out;
+    return out.isEmpty ? const [120, 180, 300] : out;
   }
 
   Future<void> _save() async {
@@ -81,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _homeName.text.trim().isEmpty ? 'HOME' : _homeName.text.trim();
     _draft.away.name =
         _awayName.text.trim().isEmpty ? 'AWAY' : _awayName.text.trim();
-    _draft.penaltyPresetsMinutes = _parsePresets(_presets.text);
+    _draft.penaltyPresetsSeconds = _parsePresets(_presets.text);
     await widget.controller.applySettings(_draft);
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -124,14 +142,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
             max: 60,
             onChanged: (v) => setState(() => _draft.periodMinutes = v),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Clock size',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+          ),
+          Row(
+            children: [
+              const Icon(Icons.text_fields, size: 18),
+              Expanded(
+                child: Slider(
+                  value: _draft.clockFontScale.clamp(0.5, 3.0),
+                  min: 0.5,
+                  max: 3.0,
+                  divisions: 25,
+                  label: '${(_draft.clockFontScale * 100).round()}%',
+                  onChanged: (v) =>
+                      setState(() => _draft.clockFontScale = v),
+                ),
+              ),
+              SizedBox(
+                width: 48,
+                child: Text(
+                  '${(_draft.clockFontScale * 100).round()}%',
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
 
           const SizedBox(height: 24),
           _sectionTitle('Penalties'),
           TextField(
             controller: _presets,
             decoration: const InputDecoration(
-              labelText: 'Penalty presets (minutes, comma-separated)',
-              hintText: '2, 3, 5',
+              labelText: 'Penalty presets (m:ss, comma-separated)',
+              hintText: '2:00, 3:00, 5:00',
               border: OutlineInputBorder(),
             ),
           ),

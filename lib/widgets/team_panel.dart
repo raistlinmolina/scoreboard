@@ -262,10 +262,34 @@ class TeamPanel extends StatelessWidget {
     );
   }
 
+  /// Parses a duration string into seconds. Accepts "m:ss" (e.g. "1:30"),
+  /// "mm:ss", or a plain integer number of seconds (e.g. "90"). Returns null
+  /// if the input is empty or invalid.
+  int? _parseDuration(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+    if (text.contains(':')) {
+      final parts = text.split(':');
+      if (parts.length != 2) return null;
+      final m = int.tryParse(parts[0].trim());
+      final s = int.tryParse(parts[1].trim());
+      if (m == null || s == null || s < 0 || s > 59 || m < 0) return null;
+      final total = m * 60 + s;
+      return total > 0 ? total : null;
+    }
+    final secs = int.tryParse(text);
+    if (secs == null || secs <= 0) return null;
+    return secs;
+  }
+
   Future<void> _showAddPenalty(BuildContext context) async {
-    final presets = controller.settings.penaltyPresetsMinutes;
+    final presets = controller.settings.penaltyPresetsSeconds;
     final numberController = TextEditingController();
-    int selectedMinutes = presets.isNotEmpty ? presets.first : 2;
+    final customController = TextEditingController();
+    // Selected preset in seconds; -1 means "use the custom field".
+    int selectedSeconds = presets.isNotEmpty ? presets.first : 120;
+
+    String fmt(int s) => '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 
     await showDialog<void>(
       context: context,
@@ -288,7 +312,7 @@ class TeamPanel extends StatelessWidget {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Duration (min)',
+                  'Duration',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                 ),
               ),
@@ -297,14 +321,32 @@ class TeamPanel extends StatelessWidget {
                 spacing: 8,
                 children: presets
                     .map(
-                      (m) => ChoiceChip(
-                        label: Text('$m'),
-                        selected: selectedMinutes == m,
-                        onSelected: (_) =>
-                            setState(() => selectedMinutes = m),
+                      (s) => ChoiceChip(
+                        label: Text(fmt(s)),
+                        selected: selectedSeconds == s,
+                        onSelected: (_) => setState(() {
+                          selectedSeconds = s;
+                          customController.clear();
+                        }),
                       ),
                     )
                     .toList(),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: customController,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Custom (m:ss or seconds)',
+                  hintText: 'e.g. 1:30',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (v) {
+                  // Any custom entry overrides the chosen preset.
+                  if (v.trim().isNotEmpty) {
+                    setState(() => selectedSeconds = -1);
+                  }
+                },
               ),
             ],
           ),
@@ -315,11 +357,10 @@ class TeamPanel extends StatelessWidget {
             ),
             FilledButton(
               onPressed: () {
-                controller.addPenalty(
-                  side,
-                  numberController.text,
-                  selectedMinutes,
-                );
+                final custom = _parseDuration(customController.text);
+                final seconds = custom ?? selectedSeconds;
+                if (seconds <= 0) return; // nothing valid chosen
+                controller.addPenalty(side, numberController.text, seconds);
                 Navigator.pop(ctx);
               },
               child: const Text('Add'),
