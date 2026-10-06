@@ -90,28 +90,41 @@ class ScoreboardScreen extends StatelessWidget {
         ),
 
         // --- Big clock ---
-        // The clock auto-fits the available space. The center column's width
-        // (driven by clockFontScale in the parent Row) controls how big it is.
+        // The clock's font size is derived from the available area and then
+        // multiplied by the user's clockFontScale, so the Settings slider has a
+        // direct, visible effect. FittedBox(scaleDown) only shrinks if a very
+        // large scale would overflow, so it never clips off-screen.
         Expanded(
           child: Center(
             child: GestureDetector(
               onTap: controller.startStop,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    controller.clockDisplay,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontFamily: 'monospace',
-                      height: 1.0,
-                      color: controller.isRunning
-                          ? Colors.greenAccent
-                          : Colors.white,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Base size at scale 1.0 is a fraction of the available
+                  // height, leaving headroom so increasing the scale visibly
+                  // enlarges the clock before FittedBox has to scale it down.
+                  final base = constraints.maxHeight * 0.55;
+                  final fontSize = (base * controller.settings.clockFontScale)
+                      .clamp(24.0, 2000.0);
+                  return FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        controller.clockDisplay,
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'monospace',
+                          height: 1.0,
+                          color: controller.isRunning
+                              ? Colors.greenAccent
+                              : Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
