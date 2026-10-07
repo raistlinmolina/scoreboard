@@ -67,16 +67,28 @@ class TeamPanel extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: Text(
-                          '$_score',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: accent,
-                            height: 1.0,
-                          ),
-                        ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Explicit size from available height × user scale, so
+                          // the score grows regardless of panel width. scaleDown
+                          // only shrinks if it would overflow horizontally.
+                          final base = constraints.maxHeight * 0.9;
+                          final fontSize =
+                              (base * controller.settings.scoreFontScale)
+                                  .clamp(24.0, 2000.0);
+                          return FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '$_score',
+                              style: TextStyle(
+                                fontSize: fontSize,
+                                fontWeight: FontWeight.w900,
+                                color: accent,
+                                height: 1.0,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),

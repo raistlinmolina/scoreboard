@@ -41,6 +41,9 @@ class GameSettings {
   /// Multiplier applied to the central clock's font size (1.0 = default).
   double clockFontScale;
 
+  /// Multiplier applied to the team score digits (1.0 = default).
+  double scoreFontScale;
+
   GameSettings({
     required this.home,
     required this.away,
@@ -50,6 +53,7 @@ class GameSettings {
     this.maxPenaltiesPerTeam = 4,
     this.hornOnPeriodEnd = true,
     this.clockFontScale = 1.0,
+    this.scoreFontScale = 1.0,
   }) : penaltyPresetsSeconds =
            penaltyPresetsSeconds ?? const [120, 180, 300]; // 2:00, 3:00, 5:00
 
@@ -68,6 +72,7 @@ class GameSettings {
     'maxPenaltiesPerTeam': maxPenaltiesPerTeam,
     'hornOnPeriodEnd': hornOnPeriodEnd,
     'clockFontScale': clockFontScale,
+    'scoreFontScale': scoreFontScale,
   };
 
   factory GameSettings.fromJson(Map<String, dynamic> json) => GameSettings(
@@ -81,6 +86,7 @@ class GameSettings {
     maxPenaltiesPerTeam: (json['maxPenaltiesPerTeam'] as num?)?.toInt() ?? 4,
     hornOnPeriodEnd: json['hornOnPeriodEnd'] as bool? ?? true,
     clockFontScale: (json['clockFontScale'] as num?)?.toDouble() ?? 1.0,
+    scoreFontScale: (json['scoreFontScale'] as num?)?.toDouble() ?? 1.0,
   );
 
   static List<int> _readPresets(Map<String, dynamic> json) {

@@ -32,7 +32,7 @@ class ScoreboardScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          flex: 3,
+                          flex: 4,
                           child: TeamPanel(
                             controller: controller,
                             side: TeamSide.home,
@@ -40,16 +40,17 @@ class ScoreboardScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Center grows with the clock font scale.
+                        // Center grows with the clock font scale, but is capped
+                        // so the score panels keep enough width to stay large.
                         Expanded(
                           flex: (4 * controller.settings.clockFontScale)
                               .round()
-                              .clamp(3, 12),
+                              .clamp(4, 8),
                           child: _centerColumn(context),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          flex: 3,
+                          flex: 4,
                           child: TeamPanel(
                             controller: controller,
                             side: TeamSide.away,

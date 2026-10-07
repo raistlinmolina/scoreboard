@@ -170,6 +170,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Score size',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+          ),
+          Row(
+            children: [
+              const Icon(Icons.tag, size: 18),
+              Expanded(
+                child: Slider(
+                  value: _draft.scoreFontScale.clamp(0.5, 3.0),
+                  min: 0.5,
+                  max: 3.0,
+                  divisions: 25,
+                  label: '${(_draft.scoreFontScale * 100).round()}%',
+                  onChanged: (v) =>
+                      setState(() => _draft.scoreFontScale = v),
+                ),
+              ),
+              SizedBox(
+                width: 48,
+                child: Text(
+                  '${(_draft.scoreFontScale * 100).round()}%',
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
 
           const SizedBox(height: 24),
           _sectionTitle('Penalties'),
