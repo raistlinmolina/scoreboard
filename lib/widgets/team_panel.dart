@@ -56,38 +56,51 @@ class TeamPanel extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // --- Score row: [−] [big score] [+] ---
+          // --- Score with corner +/- buttons ---
+          // The digits fill the whole area (so they're as large as the clock),
+          // with the −/+ controls floating in the bottom corners so they don't
+          // shrink the number.
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            child: Stack(
               children: [
-                _sideButton(
-                  icon: Icons.remove,
-                  tooltip: 'Remove goal',
-                  onTap: () => controller.removeGoal(side),
-                ),
-                Expanded(
-                  child: Center(
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: Text(
-                        '$_score',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: accent,
-                          height: 1.0,
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(
+                          '$_score',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: accent,
+                            height: 1.0,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                _sideButton(
-                  icon: Icons.add,
-                  tooltip: 'Add goal',
-                  // Home plus sounds the horn, like the old GOAL button.
-                  onTap: () => controller.addGoal(
-                    side,
-                    withHorn: side == TeamSide.home,
+                Positioned(
+                  left: 0,
+                  bottom: 0,
+                  child: _sideButton(
+                    icon: Icons.remove,
+                    tooltip: 'Remove goal',
+                    onTap: () => controller.removeGoal(side),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: _sideButton(
+                    icon: Icons.add,
+                    tooltip: 'Add goal',
+                    // Home plus sounds the horn, like the old GOAL button.
+                    onTap: () => controller.addGoal(
+                      side,
+                      withHorn: side == TeamSide.home,
+                    ),
                   ),
                 ),
               ],
