@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../models/game_settings.dart';
 import '../services/game_controller.dart';
 import '../widgets/team_panel.dart';
+import '../widgets/penalty_panel.dart';
 import 'settings_screen.dart';
 
-/// The main scoreboard: home panel | center clock & controls | away panel.
+/// The main scoreboard. Top row: home score | center clock & controls | away
+/// score. Bottom row: home penalties | away penalties (under the clock).
 class ScoreboardScreen extends StatelessWidget {
   final GameController controller;
 
@@ -22,32 +24,65 @@ class ScoreboardScreen extends StatelessWidget {
           builder: (context, _) {
             return Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Row(
+              child: Column(
                 children: [
+                  // --- TOP: scores + clock ---
                   Expanded(
                     flex: 3,
-                    child: TeamPanel(
-                      controller: controller,
-                      side: TeamSide.home,
-                      accent: homeAccent,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: TeamPanel(
+                            controller: controller,
+                            side: TeamSide.home,
+                            accent: homeAccent,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Center grows with the clock font scale.
+                        Expanded(
+                          flex: (4 * controller.settings.clockFontScale)
+                              .round()
+                              .clamp(3, 12),
+                          child: _centerColumn(context),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 3,
+                          child: TeamPanel(
+                            controller: controller,
+                            side: TeamSide.away,
+                            accent: awayAccent,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Center column grows with the clock font scale so a larger
-                  // scale gives the clock more room (and thus a bigger clock).
+
+                  const SizedBox(height: 12),
+
+                  // --- BOTTOM: penalties, each team on its side ---
                   Expanded(
-                    flex: (4 * controller.settings.clockFontScale)
-                        .round()
-                        .clamp(3, 12),
-                    child: _centerColumn(context),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 3,
-                    child: TeamPanel(
-                      controller: controller,
-                      side: TeamSide.away,
-                      accent: awayAccent,
+                    flex: 1,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: PenaltyPanel(
+                            controller: controller,
+                            side: TeamSide.home,
+                            accent: homeAccent,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: PenaltyPanel(
+                            controller: controller,
+                            side: TeamSide.away,
+                            accent: awayAccent,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
