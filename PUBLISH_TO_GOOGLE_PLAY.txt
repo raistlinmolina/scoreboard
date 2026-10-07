@@ -1,0 +1,138 @@
+==========================================================================
+ PUBLISHING MOLI-PUCK TO GOOGLE PLAY — STEPS FOR YOU
+ (José Manuel Molina)   —   generated 2026-10-07
+==========================================================================
+
+WHAT I ALREADY DID FOR YOU (in the repo)
+------------------------------------------------------------------
+✓ App launcher icon set from the penguin logo (Android adaptive + web).
+✓ Android app display name set to "Moli-Puck".
+✓ Release SIGNING CONFIG wired up: android/app/build.gradle.kts now reads
+  android/key.properties (git-ignored). Falls back to debug signing if that
+  file is absent, so normal `flutter run` still works.
+✓ key.properties TEMPLATE added: android/key.properties.template
+✓ Play Store graphics generated:
+     store/play_icon_512.png          (512x512 app icon)
+     store/play_feature_1024x500.png  (feature graphic)
+✓ Privacy policy draft:  store/PRIVACY_POLICY.md
+✓ Store listing text:    store/STORE_LISTING.txt
+✓ applicationId = com.chpinguinosmadrid.scoreboard  (PERMANENT once published)
+✓ version = 1.0.0+1
+
+I CANNOT do these (they need your identity, secrets, or a Google account):
+creating the keystore, creating the Play Console account, filling the store
+listing, and uploading. Those are the steps below.
+
+==========================================================================
+ STEP 1 — Create your upload keystore (ONE TIME, keep it safe forever)
+==========================================================================
+On your Windows machine, in a folder OUTSIDE the project (so it's never
+committed), e.g. C:\Users\ejosmol\keys\ :
+
+    keytool -genkey -v -keystore upload-keystore.jks -storetype JKS ^
+        -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+- It asks for a password (twice) and some name/org fields (can be anything).
+- REMEMBER the store password, key password, and alias ("upload").
+- BACK UP upload-keystore.jks + the passwords somewhere safe (password manager,
+  cloud backup). If you lose it you can still recover via Play App Signing, but
+  don't rely on that — keep the file.
+
+==========================================================================
+ STEP 2 — Point the project at your keystore
+==========================================================================
+Copy the template and fill in real values:
+
+    cd C:\Users\ejosmol\scoreboard\android
+    copy key.properties.template key.properties
+
+Edit android\key.properties so it reads (use DOUBLE backslashes in the path):
+
+    storePassword=YOUR_STORE_PASSWORD
+    keyPassword=YOUR_KEY_PASSWORD
+    keyAlias=upload
+    storeFile=C:\\Users\\ejosmol\\keys\\upload-keystore.jks
+
+(key.properties is git-ignored — it will NOT be committed. Good.)
+
+==========================================================================
+ STEP 3 — Build the release App Bundle (.aab) that Play requires
+==========================================================================
+    cd C:\Users\ejosmol\scoreboard
+    git pull
+    flutter pub get
+    flutter build appbundle --release
+
+Output file to upload:
+    build\app\outputs\bundle\release\app-release.aab
+
+(If the build complains the key.properties path is wrong, re-check STEP 2.)
+
+==========================================================================
+ STEP 4 — Capture screenshots (needed for the listing)
+==========================================================================
+Run the app and take at least 2 screenshots (landscape is fine):
+    flutter run --release
+Use them for the "phone" screenshot slot; add tablet/Chromebook ones if you can.
+Google needs: minimum 2 screenshots per form factor you target.
+
+==========================================================================
+ STEP 5 — Host the privacy policy at a public URL
+==========================================================================
+Play requires a public privacy-policy URL. Options:
+- Put store/PRIVACY_POLICY.md content on a free GitHub Pages site, or any site.
+- Replace <YOUR_EMAIL_HERE> in it with a real contact email first.
+Copy the final public URL — you'll paste it in the listing.
+
+==========================================================================
+ STEP 6 — Create a Google Play Developer account
+==========================================================================
+- Go to: https://play.google.com/console
+- Pay the one-time $25 USD fee.
+- Complete identity verification (can take a day or two for new accounts).
+
+==========================================================================
+ STEP 7 — Create the app in Play Console and fill the listing
+==========================================================================
+In Play Console: "Create app".
+  • App name: Moli-Puck
+  • Default language, type = App, Free.
+Then complete these sections (text is in store/STORE_LISTING.txt):
+  • Main store listing:
+      - Short + full description (from STORE_LISTING.txt)
+      - App icon: store/play_icon_512.png
+      - Feature graphic: store/play_feature_1024x500.png
+      - Screenshots: from STEP 4
+  • Privacy policy: paste the URL from STEP 5
+  • App content / Data safety: declare "No data collected / No data shared"
+      (the app is fully offline; see PRIVACY_POLICY.md)
+  • Content rating: fill the questionnaire → rating "Everyone"
+  • Target audience: general audience (not directed at children)
+  • Ads: No ads
+  • Category: Sports
+
+==========================================================================
+ STEP 8 — Upload the build and roll out
+==========================================================================
+- Play Console > Testing > Internal testing (recommended first):
+    create a release, upload app-release.aab (from STEP 3), add your own
+    Google account as a tester, and install via the opt-in link to verify.
+- When happy: Production > Create release > upload the .aab > review notes >
+  submit for review.
+- First-time apps/accounts: Google may require a short closed test and will
+  review before going live (can take a few days).
+
+==========================================================================
+ IMPORTANT NOTES
+==========================================================================
+- applicationId "com.chpinguinosmadrid.scoreboard" is PERMANENT once published.
+  If you want a different one, tell me BEFORE you publish.
+- Opt in to "Play App Signing" when prompted (recommended; Google manages the
+  final signing key, your keystore is just the upload key).
+- For future updates: bump the version in pubspec.yaml (e.g. 1.0.1+2), rebuild
+  the .aab, and upload a new release. The versionCode (+N) must increase each
+  upload.
+- I could NOT build the .aab in my environment (no Android SDK), so STEP 3 is
+  the first place it compiles for real — if anything errors there, send me the
+  message and I'll fix it.
+==========================================================================

@@ -1,0 +1,46 @@
+MOLI-PUCK — GOOGLE PLAY STORE LISTING (draft text)
+===================================================
+
+APP NAME (max 30 chars)
+Moli-Puck
+
+SHORT DESCRIPTION (max 80 chars)
+Clear, configurable hockey scoreboard: clock, scores, penalties and horn.
+
+FULL DESCRIPTION (max 4000 chars)
+Moli-Puck is a clean, easy-to-read scoreboard for inline and roller hockey,
+designed to be run from a tablet or Chromebook at the rink.
+
+Features:
+• Large, clearly visible game clock — tap to start/stop, with a big START/STOP
+  button and quick +/- time adjustments.
+• Configurable periods (count and length).
+• Big, bold team scores with simple +/- controls; a goal horn for the home team.
+• Penalties per player number with configurable preset durations (e.g. 1:30,
+  4:00, 10:00) or a custom time; they count down while the clock runs and clear
+  automatically or on demand.
+• Configurable team names and logos.
+• Adjustable clock and score sizes so it reads well on any display.
+• Loud horn, auto-sounded at the end of a period.
+• Landscape, full-screen, and keeps the screen awake during a game.
+
+Works fully offline. No accounts, no ads, no data collection.
+
+Concept, design and development by José Manuel Molina.
+
+---------------------------------------------------
+CATEGORY: Sports
+CONTENT RATING: Everyone
+CONTAINS ADS: No
+IN-APP PURCHASES: No
+---------------------------------------------------
+
+GRAPHIC ASSETS (already generated for you)
+• App icon (512x512):      store/play_icon_512.png
+• Feature graphic (1024x500): store/play_feature_1024x500.png
+• Screenshots: capture these yourself from the running app (see steps TXT).
+  Google requires at least 2 phone screenshots; add tablet/Chromebook ones too.
+
+PRIVACY POLICY
+• Draft provided at store/PRIVACY_POLICY.md — host it at a public URL
+  (e.g. a GitHub Pages page or any website) and put that URL in the listing.
