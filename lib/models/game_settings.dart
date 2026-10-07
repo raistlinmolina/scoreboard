@@ -55,11 +55,11 @@ class GameSettings {
     this.clockFontScale = 1.0,
     this.scoreFontScale = 1.0,
   }) : penaltyPresetsSeconds =
-           penaltyPresetsSeconds ?? const [120, 180, 300]; // 2:00, 3:00, 5:00
+           penaltyPresetsSeconds ?? const [120, 300, 600]; // 2:00, 5:00, 10:00
 
   /// Sensible defaults for a fresh install.
   factory GameSettings.defaults() => GameSettings(
-    home: Team(name: 'HOME'),
+    home: Team(name: 'PINGÜINOS'),
     away: Team(name: 'AWAY'),
   );
 
@@ -98,7 +98,7 @@ class GameSettings {
     if (mins != null) {
       return mins.map((e) => (e as num).toInt() * 60).toList();
     }
-    return const [120, 180, 300];
+    return const [120, 300, 600];
   }
 
   String encode() => jsonEncode(toJson());

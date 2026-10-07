@@ -3,9 +3,9 @@ import 'package:scoreboard/models/game_settings.dart';
 
 void main() {
   group('GameSettings penalty presets (seconds)', () {
-    test('defaults are 2:00, 3:00, 5:00 in seconds', () {
+    test('defaults are 2:00, 5:00, 10:00 in seconds', () {
       final s = GameSettings.defaults();
-      expect(s.penaltyPresetsSeconds, [120, 180, 300]);
+      expect(s.penaltyPresetsSeconds, [120, 300, 600]);
     });
 
     test('JSON round-trip preserves second-based presets and clock scale', () {
