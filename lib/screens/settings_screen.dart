@@ -91,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       if (secs != null && secs > 0 && secs <= 3600) out.add(secs);
     }
-    return out.isEmpty ? const [120, 300, 600] : out;
+    return out.isEmpty ? const [90, 240, 600] : out;
   }
 
   Future<void> _save() async {
