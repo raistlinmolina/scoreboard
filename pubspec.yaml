@@ -38,6 +38,7 @@ dependencies:
   image_picker: ^1.1.2          # pick team logos from the device
   audioplayers: ^6.1.0          # horn sound
   wakelock_plus: ^1.2.8         # keep the screen awake during a game
+  path_provider: ^2.1.4         # app documents dir for storing team logos
 
 dev_dependencies:
   flutter_test:

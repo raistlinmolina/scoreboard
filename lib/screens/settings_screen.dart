@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/game_settings.dart';
 import '../services/game_controller.dart';
+import '../services/logo_store.dart';
 import '../widgets/team_logo.dart';
 
 /// Edit team names/logos and game configuration (periods, penalties, horn).
@@ -17,6 +18,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late GameSettings _draft;
   final _picker = ImagePicker();
+  final _logoStore = LogoStore();
 
   late TextEditingController _homeName;
   late TextEditingController _awayName;
@@ -49,11 +51,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         maxHeight: 512,
       );
       if (x == null) return;
+      // Copy into the app's permanent documents folder so the logo survives
+      // the OS purging the picker's cache.
+      final storedPath = await _logoStore.persist(x.path);
+      if (!mounted) return;
       setState(() {
         if (side == TeamSide.home) {
-          _draft.home.logoPath = x.path;
+          _draft.home.logoPath = storedPath;
         } else {
-          _draft.away.logoPath = x.path;
+          _draft.away.logoPath = storedPath;
         }
       });
     } catch (e) {
