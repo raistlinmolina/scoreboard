@@ -12,3 +12,13 @@ easy to clar Penaltie
 goa tracking, 
 horn for local team
 configurable teams name and logo
+
+New requisites:
+
+Spacebar starts and stops the clock
+1 increases local goals 2 decreases 9 increases away goals 0 decreases 
+All colors configurable so we can get best contrast in a TV
+Persist configuration
+Possibility to add teams with logos so we can recover them of the games
+Already put in the configuration pingüinos with out logo, the one IU passed you.
+

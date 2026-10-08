@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/game_settings.dart';
 import '../services/game_controller.dart';
 import '../widgets/team_panel.dart';
@@ -7,91 +8,146 @@ import 'settings_screen.dart';
 
 /// The main scoreboard. Top row: home score | center clock & controls | away
 /// score. Bottom row: home penalties | away penalties (under the clock).
-class ScoreboardScreen extends StatelessWidget {
+///
+/// Keyboard shortcuts (useful with a Chromebook/TV + keyboard):
+///   Space = start/stop clock
+///   1 = +home goal   2 = -home goal
+///   9 = +away goal   0 = -away goal
+class ScoreboardScreen extends StatefulWidget {
   final GameController controller;
 
   const ScoreboardScreen({super.key, required this.controller});
 
-  static const Color homeAccent = Color(0xFFFFB74D); // orange
-  static const Color awayAccent = Color(0xFF4FC3F7); // light blue
+  @override
+  State<ScoreboardScreen> createState() => _ScoreboardScreenState();
+}
+
+class _ScoreboardScreenState extends State<ScoreboardScreen> {
+  final FocusNode _focusNode = FocusNode();
+
+  GameController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Grab keyboard focus so shortcuts work immediately.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleKey(KeyEvent event) {
+    if (event is! KeyDownEvent) return;
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.space) {
+      controller.startStop();
+    } else if (key == LogicalKeyboardKey.digit1 ||
+        key == LogicalKeyboardKey.numpad1) {
+      controller.addGoal(TeamSide.home, withHorn: true);
+    } else if (key == LogicalKeyboardKey.digit2 ||
+        key == LogicalKeyboardKey.numpad2) {
+      controller.removeGoal(TeamSide.home);
+    } else if (key == LogicalKeyboardKey.digit9 ||
+        key == LogicalKeyboardKey.numpad9) {
+      controller.addGoal(TeamSide.away);
+    } else if (key == LogicalKeyboardKey.digit0 ||
+        key == LogicalKeyboardKey.numpad0) {
+      controller.removeGoal(TeamSide.away);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: ListenableBuilder(
-          listenable: controller,
-          builder: (context, _) {
-            return Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                children: [
-                  // --- TOP: scores + clock ---
-                  Expanded(
-                    flex: 3,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 4,
-                          child: TeamPanel(
-                            controller: controller,
-                            side: TeamSide.home,
-                            accent: homeAccent,
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final colors = controller.settings.colors;
+        final homeAccent = colors.homeAccentColor;
+        final awayAccent = colors.awayAccentColor;
+        return Scaffold(
+          backgroundColor: colors.backgroundColor,
+          body: SafeArea(
+            child: KeyboardListener(
+              focusNode: _focusNode,
+              autofocus: true,
+              onKeyEvent: _handleKey,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  children: [
+                    // --- TOP: scores + clock ---
+                    Expanded(
+                      flex: 3,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: TeamPanel(
+                              controller: controller,
+                              side: TeamSide.home,
+                              accent: homeAccent,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        // Center grows with the clock font scale, but is capped
-                        // so the score panels keep enough width to stay large.
-                        Expanded(
-                          flex: (4 * controller.settings.clockFontScale)
-                              .round()
-                              .clamp(4, 8),
-                          child: _centerColumn(context),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 4,
-                          child: TeamPanel(
-                            controller: controller,
-                            side: TeamSide.away,
-                            accent: awayAccent,
+                          const SizedBox(width: 12),
+                          // Center grows with the clock font scale, but capped
+                          // so the score panels keep width to stay large.
+                          Expanded(
+                            flex: (4 * controller.settings.clockFontScale)
+                                .round()
+                                .clamp(4, 8),
+                            child: _centerColumn(context),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 4,
+                            child: TeamPanel(
+                              controller: controller,
+                              side: TeamSide.away,
+                              accent: awayAccent,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // --- BOTTOM: penalties, each team on its side ---
-                  Expanded(
-                    flex: 1,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: PenaltyPanel(
-                            controller: controller,
-                            side: TeamSide.home,
-                            accent: homeAccent,
+                    // --- BOTTOM: penalties, each team on its side ---
+                    Expanded(
+                      flex: 1,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: PenaltyPanel(
+                              controller: controller,
+                              side: TeamSide.home,
+                              accent: homeAccent,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: PenaltyPanel(
-                            controller: controller,
-                            side: TeamSide.away,
-                            accent: awayAccent,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: PenaltyPanel(
+                              controller: controller,
+                              side: TeamSide.away,
+                              accent: awayAccent,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -154,8 +210,8 @@ class ScoreboardScreen extends StatelessWidget {
                           fontFamily: 'monospace',
                           height: 1.0,
                           color: controller.isRunning
-                              ? Colors.greenAccent
-                              : Colors.white,
+                              ? controller.settings.colors.clockRunningColor
+                              : controller.settings.colors.clockStoppedColor,
                         ),
                       ),
                     ),

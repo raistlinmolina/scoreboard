@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show Color;
 
 /// Which side of the scoreboard a team is on. The "home" side owns the horn.
 enum TeamSide { home, away }
@@ -18,6 +19,59 @@ class Team {
   );
 
   Team copy() => Team(name: name, logoPath: logoPath);
+}
+
+/// User-configurable colors for the scoreboard, chosen for TV contrast. Stored
+/// as 32-bit ARGB ints.
+class ScoreboardColors {
+  int background; // whole-screen background
+  int clockRunning; // clock text while running
+  int clockStopped; // clock text while stopped
+  int homeAccent; // home team color (score, borders, buttons)
+  int awayAccent; // away team color
+
+  ScoreboardColors({
+    required this.background,
+    required this.clockRunning,
+    required this.clockStopped,
+    required this.homeAccent,
+    required this.awayAccent,
+  });
+
+  factory ScoreboardColors.defaults() => ScoreboardColors(
+    background: 0xFF000000, // black — best TV contrast
+    clockRunning: 0xFF69F0AE, // green accent
+    clockStopped: 0xFFFFFFFF, // white
+    homeAccent: 0xFFFFB74D, // orange
+    awayAccent: 0xFF4FC3F7, // light blue
+  );
+
+  Color get backgroundColor => Color(background);
+  Color get clockRunningColor => Color(clockRunning);
+  Color get clockStoppedColor => Color(clockStopped);
+  Color get homeAccentColor => Color(homeAccent);
+  Color get awayAccentColor => Color(awayAccent);
+
+  Map<String, dynamic> toJson() => {
+    'background': background,
+    'clockRunning': clockRunning,
+    'clockStopped': clockStopped,
+    'homeAccent': homeAccent,
+    'awayAccent': awayAccent,
+  };
+
+  factory ScoreboardColors.fromJson(Map<String, dynamic> json) {
+    final d = ScoreboardColors.defaults();
+    return ScoreboardColors(
+      background: (json['background'] as num?)?.toInt() ?? d.background,
+      clockRunning: (json['clockRunning'] as num?)?.toInt() ?? d.clockRunning,
+      clockStopped: (json['clockStopped'] as num?)?.toInt() ?? d.clockStopped,
+      homeAccent: (json['homeAccent'] as num?)?.toInt() ?? d.homeAccent,
+      awayAccent: (json['awayAccent'] as num?)?.toInt() ?? d.awayAccent,
+    );
+  }
+
+  ScoreboardColors copy() => ScoreboardColors.fromJson(toJson());
 }
 
 /// Configurable game settings, persisted between sessions.
@@ -44,6 +98,12 @@ class GameSettings {
   /// Multiplier applied to the team score digits (1.0 = default).
   double scoreFontScale;
 
+  /// Configurable colors for TV contrast.
+  ScoreboardColors colors;
+
+  /// Saved team library so teams (with logos) can be reused across games.
+  List<Team> teamLibrary;
+
   GameSettings({
     required this.home,
     required this.away,
@@ -54,14 +114,26 @@ class GameSettings {
     this.hornOnPeriodEnd = true,
     this.clockFontScale = 1.0,
     this.scoreFontScale = 1.0,
+    ScoreboardColors? colors,
+    List<Team>? teamLibrary,
   }) : penaltyPresetsSeconds =
-           penaltyPresetsSeconds ?? const [90, 240, 600]; // 1:30, 4:00, 10:00
+           penaltyPresetsSeconds ?? const [90, 240, 600], // 1:30, 4:00, 10:00
+       colors = colors ?? ScoreboardColors.defaults(),
+       teamLibrary = teamLibrary ?? [];
 
-  /// Sensible defaults for a fresh install.
-  factory GameSettings.defaults() => GameSettings(
-    home: Team(name: 'PINGÜINOS'),
-    away: Team(name: 'AWAY'),
-  );
+  /// Sensible defaults for a fresh install. Pre-loads PINGÜINOS (with the
+  /// bundled logo) as the home team and into the team library.
+  factory GameSettings.defaults() {
+    final penguins = Team(
+      name: 'PINGÜINOS',
+      logoPath: 'asset://assets/branding/icon.png',
+    );
+    return GameSettings(
+      home: penguins.copy(),
+      away: Team(name: 'AWAY'),
+      teamLibrary: [penguins.copy()],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'home': home.toJson(),
@@ -73,6 +145,8 @@ class GameSettings {
     'hornOnPeriodEnd': hornOnPeriodEnd,
     'clockFontScale': clockFontScale,
     'scoreFontScale': scoreFontScale,
+    'colors': colors.toJson(),
+    'teamLibrary': teamLibrary.map((t) => t.toJson()).toList(),
   };
 
   factory GameSettings.fromJson(Map<String, dynamic> json) => GameSettings(
@@ -87,6 +161,14 @@ class GameSettings {
     hornOnPeriodEnd: json['hornOnPeriodEnd'] as bool? ?? true,
     clockFontScale: (json['clockFontScale'] as num?)?.toDouble() ?? 1.0,
     scoreFontScale: (json['scoreFontScale'] as num?)?.toDouble() ?? 1.0,
+    colors: json['colors'] == null
+        ? ScoreboardColors.defaults()
+        : ScoreboardColors.fromJson(
+            (json['colors'] as Map).cast<String, dynamic>(),
+          ),
+    teamLibrary: ((json['teamLibrary'] as List<dynamic>?) ?? [])
+        .map((e) => Team.fromJson((e as Map).cast<String, dynamic>()))
+        .toList(),
   );
 
   static List<int> _readPresets(Map<String, dynamic> json) {

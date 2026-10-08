@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/game_settings.dart';
 import '../services/game_controller.dart';
+import 'team_logo.dart';
 
 /// One team's score block: logo + name on top, then a large score flanked by
 /// minus (−) and plus (+) buttons. The home team's plus also sounds the horn.
@@ -38,7 +38,7 @@ class TeamPanel extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _logo(),
+              TeamLogo(path: _team.logoPath, accent: accent, size: 48),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
@@ -122,33 +122,6 @@ class TeamPanel extends StatelessWidget {
       ),
     );
   }
-
-  Widget _logo() {
-    final path = _team.logoPath;
-    if (path != null && path.isNotEmpty && File(path).existsSync()) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.file(
-          File(path),
-          width: 48,
-          height: 48,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => _logoPlaceholder(),
-        ),
-      );
-    }
-    return _logoPlaceholder();
-  }
-
-  Widget _logoPlaceholder() => Container(
-    width: 48,
-    height: 48,
-    decoration: BoxDecoration(
-      color: accent.withValues(alpha: 0.2),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Icon(Icons.shield, color: accent),
-  );
 
   /// A large circular +/- button sized to sit beside the score digits.
   Widget _sideButton({

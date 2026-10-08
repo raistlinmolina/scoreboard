@@ -6,24 +6,37 @@ An inline hockey scoreboard built with Flutter, for **Android** and
 ## Features
 
 - **Game clock** — large central countdown; tap it or the big START/STOP button
-  to run/pause. Adjust by ±1s / ±1min when stopped.
+  to run/pause. Adjust by ±1s / ±1min when stopped. Configurable size.
 - **Periods** — configurable count and length; step between periods.
-- **Scores** — per-team goal +/- with a prominent GOAL button.
+- **Scores** — per-team score with +/- controls; configurable size. The home
+  team's + sounds the horn.
 - **Penalties** — add per player number with configurable preset durations
-  (e.g. 2/3/5 min); they count down only while the clock runs, auto-clear at
-  zero, and can be cleared individually or all at once. Max concurrent
-  penalties per team is configurable.
-- **Horn** — manual horn button; the home-team GOAL button sounds the horn, and
-  the horn sounds automatically at period end (configurable).
-- **Teams** — configurable names and logos (pick an image from the device).
+  (e.g. 1:30 / 4:00 / 10:00) or a custom m:ss time; they count down only while
+  the clock runs, auto-clear at zero, and can be cleared individually or all at
+  once. Shown below the clock, each team on its side.
+- **Horn** — manual horn button; home-team goal sounds the horn, and it sounds
+  automatically at period end (configurable).
+- **Teams** — configurable names and logos, plus a reusable **team library**
+  so you can save teams (with logos) and reload them for future games.
+- **Colors** — every color (background, clock, each team) is configurable for
+  best contrast on a TV.
 - Keeps the screen awake during a game; locked to landscape.
+
+## Keyboard shortcuts
+
+Handy on a Chromebook/TV with a keyboard:
+
+- **Space** — start/stop the clock
+- **1** / **2** — home goals + / −
+- **9** / **0** — away goals + / −
 
 ## Settings
 
-Open the menu (⋮) → **Settings** to configure team names/logos, period count
-and length, penalty presets, max penalties per team, and the period-end horn.
-Settings persist between sessions. The menu also has **Reset clock** and
-**New game** (resets scores, penalties, period and clock).
+Open the menu (⋮) → **Settings** to configure team names/logos (and the team
+library), period count and length, penalty presets, max penalties per team,
+the period-end horn, clock/score sizes, and all colors. Settings persist
+between sessions. The menu also has **Reset clock** and **New game** (resets
+scores, penalties, period and clock).
 
 ## Horn sound
 

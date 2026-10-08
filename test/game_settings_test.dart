@@ -37,5 +37,29 @@ void main() {
       expect(restored.clockFontScale, 1.0);
       expect(restored.scoreFontScale, 1.0);
     });
+
+    test('colors round-trip and default sensibly', () {
+      final s = GameSettings.defaults();
+      // Defaults: black background, orange home, light-blue away.
+      expect(s.colors.background, 0xFF000000);
+      s.colors.homeAccent = 0xFFFF0000;
+      final restored = GameSettings.decode(s.encode());
+      expect(restored.colors.homeAccent, 0xFFFF0000);
+      expect(restored.colors.background, 0xFF000000);
+    });
+
+    test('team library round-trips and defaults include PINGÜINOS', () {
+      final s = GameSettings.defaults();
+      expect(s.home.name, 'PINGÜINOS');
+      expect(s.teamLibrary.any((t) => t.name == 'PINGÜINOS'), isTrue);
+
+      s.teamLibrary.add(Team(name: 'TIGERS', logoPath: '/tmp/t.png'));
+      final restored = GameSettings.decode(s.encode());
+      expect(restored.teamLibrary.map((t) => t.name), contains('TIGERS'));
+      expect(
+        restored.teamLibrary.firstWhere((t) => t.name == 'TIGERS').logoPath,
+        '/tmp/t.png',
+      );
+    });
   });
 }

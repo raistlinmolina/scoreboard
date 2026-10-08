@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/game_settings.dart';
 import '../services/game_controller.dart';
+import '../widgets/team_logo.dart';
 
 /// Edit team names/logos and game configuration (periods, penalties, horn).
 class SettingsScreen extends StatefulWidget {
@@ -225,9 +225,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _draft.hornOnPeriodEnd,
             onChanged: (v) => setState(() => _draft.hornOnPeriodEnd = v),
           ),
+
+          const SizedBox(height: 24),
+          _sectionTitle('Colors (TV contrast)'),
+          _colorRow(
+            'Background',
+            _draft.colors.background,
+            (v) => setState(() => _draft.colors.background = v),
+          ),
+          _colorRow(
+            'Clock (running)',
+            _draft.colors.clockRunning,
+            (v) => setState(() => _draft.colors.clockRunning = v),
+          ),
+          _colorRow(
+            'Clock (stopped)',
+            _draft.colors.clockStopped,
+            (v) => setState(() => _draft.colors.clockStopped = v),
+          ),
+          _colorRow(
+            'Home team',
+            _draft.colors.homeAccent,
+            (v) => setState(() => _draft.colors.homeAccent = v),
+          ),
+          _colorRow(
+            'Away team',
+            _draft.colors.awayAccent,
+            (v) => setState(() => _draft.colors.awayAccent = v),
+          ),
         ],
       ),
     );
+  }
+
+  // High-contrast palette suited to TV displays.
+  static const List<int> _palette = [
+    0xFF000000, // black
+    0xFFFFFFFF, // white
+    0xFFF44336, // red
+    0xFFFF9800, // orange
+    0xFFFFB74D, // light orange
+    0xFFFFEB3B, // yellow
+    0xFF4CAF50, // green
+    0xFF69F0AE, // green accent
+    0xFF00BCD4, // cyan
+    0xFF4FC3F7, // light blue
+    0xFF2196F3, // blue
+    0xFF9C27B0, // purple
+    0xFFE91E63, // pink
+    0xFF9E9E9E, // grey
+  ];
+
+  Widget _colorRow(String label, int value, ValueChanged<int> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(width: 150, child: Text(label)),
+          Expanded(
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: _palette.map((c) {
+                final selected = c == value;
+                return GestureDetector(
+                  onTap: () => onChanged(c),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Color(c),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: selected ? Colors.white : Colors.white24,
+                        width: selected ? 3 : 1,
+                      ),
+                    ),
+                    child: selected
+                        ? Icon(
+                            Icons.check,
+                            size: 16,
+                            color: _contrastOn(c),
+                          )
+                        : null,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Pick black/white check mark for visibility on a given swatch.
+  Color _contrastOn(int argb) {
+    final c = Color(argb);
+    final luminance = c.computeLuminance();
+    return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
   Widget _sectionTitle(String t) => Padding(
@@ -247,59 +342,156 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String label,
     TextEditingController nameController,
   ) {
-    final logoPath =
-        side == TeamSide.home ? _draft.home.logoPath : _draft.away.logoPath;
+    final team = side == TeamSide.home ? _draft.home : _draft.away;
+    final logoPath = team.logoPath;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Row(
+        child: Column(
           children: [
-            GestureDetector(
-              onTap: () => _pickLogo(side),
-              child: Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(10),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => _pickLogo(side),
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: (logoPath != null && logoPath.isNotEmpty)
+                        ? TeamLogo(
+                            path: logoPath,
+                            accent: Colors.orangeAccent,
+                            size: 64,
+                            radius: 10,
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white10,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.add_a_photo),
+                          ),
+                  ),
                 ),
-                child: (logoPath != null &&
-                        logoPath.isNotEmpty &&
-                        File(logoPath).existsSync())
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(File(logoPath), fit: BoxFit.cover),
-                      )
-                    : const Icon(Icons.add_a_photo),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: nameController,
-                textCapitalization: TextCapitalization.characters,
-                decoration: InputDecoration(
-                  labelText: label,
-                  border: const OutlineInputBorder(),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: nameController,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: label,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
                 ),
-              ),
+                if (logoPath != null && logoPath.isNotEmpty)
+                  IconButton(
+                    tooltip: 'Remove logo',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => setState(() {
+                      if (side == TeamSide.home) {
+                        _draft.home.logoPath = null;
+                      } else {
+                        _draft.away.logoPath = null;
+                      }
+                    }),
+                  ),
+              ],
             ),
-            if (logoPath != null && logoPath.isNotEmpty)
-              IconButton(
-                tooltip: 'Remove logo',
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => setState(() {
-                  if (side == TeamSide.home) {
-                    _draft.home.logoPath = null;
-                  } else {
-                    _draft.away.logoPath = null;
-                  }
-                }),
-              ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _loadFromLibrary(side, nameController),
+                  icon: const Icon(Icons.folder_open, size: 18),
+                  label: const Text('Load team'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _saveToLibrary(side, nameController),
+                  icon: const Icon(Icons.bookmark_add, size: 18),
+                  label: const Text('Save team'),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  /// Saves the current side's team (name + logo) into the reusable library.
+  /// Replaces an existing library entry with the same name.
+  void _saveToLibrary(TeamSide side, TextEditingController nameController) {
+    final name = nameController.text.trim();
+    if (name.isEmpty) {
+      _toast('Enter a team name before saving.');
+      return;
+    }
+    final logo =
+        side == TeamSide.home ? _draft.home.logoPath : _draft.away.logoPath;
+    setState(() {
+      _draft.teamLibrary.removeWhere(
+        (t) => t.name.toLowerCase() == name.toLowerCase(),
+      );
+      _draft.teamLibrary.add(Team(name: name, logoPath: logo));
+      _draft.teamLibrary.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+    });
+    _toast('Saved "$name" to the team library.');
+  }
+
+  /// Lets the user pick a saved team from the library into this side.
+  Future<void> _loadFromLibrary(
+    TeamSide side,
+    TextEditingController nameController,
+  ) async {
+    if (_draft.teamLibrary.isEmpty) {
+      _toast('No saved teams yet. Use "Save team" first.');
+      return;
+    }
+    final chosen = await showDialog<Team>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Load team'),
+        children: _draft.teamLibrary
+            .map(
+              (t) => SimpleDialogOption(
+                onPressed: () => Navigator.pop(ctx, t),
+                child: Row(
+                  children: [
+                    TeamLogo(path: t.logoPath, accent: Colors.orangeAccent, size: 32),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(t.name)),
+                    IconButton(
+                      tooltip: 'Delete from library',
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      onPressed: () {
+                        setState(() => _draft.teamLibrary.remove(t));
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+    if (chosen == null) return;
+    setState(() {
+      if (side == TeamSide.home) {
+        _draft.home = chosen.copy();
+      } else {
+        _draft.away = chosen.copy();
+      }
+      nameController.text = chosen.name;
+    });
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Widget _stepperRow({
