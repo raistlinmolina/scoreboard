@@ -61,5 +61,38 @@ void main() {
         '/tmp/t.png',
       );
     });
+
+    test('old/partial saved config survives an update (merge onto defaults)', () {
+      // Simulate a blob saved by an OLDER app version: only a few fields,
+      // none of the newer ones (colors, teamLibrary, scoreFontScale, ...).
+      final restored = GameSettings.fromJson({
+        'home': {'name': 'LIONS', 'logoPath': '/tmp/lions.png'},
+        'away': {'name': 'BEARS'},
+        'periodCount': 3,
+        'periodMinutes': 15,
+        'penaltyPresetsSeconds': [90, 240, 600],
+      });
+
+      // Existing user values are PRESERVED, not reset:
+      expect(restored.home.name, 'LIONS');
+      expect(restored.home.logoPath, '/tmp/lions.png');
+      expect(restored.away.name, 'BEARS');
+      expect(restored.periodCount, 3);
+      expect(restored.periodMinutes, 15);
+
+      // New fields appear at sensible defaults (no crash, no data loss):
+      expect(restored.scoreFontScale, 1.0);
+      expect(restored.colors.background, 0xFF000000);
+      // teamLibrary was absent in the old blob, so it falls back to the
+      // default library (which includes PINGÜINOS).
+      expect(restored.teamLibrary.any((t) => t.name == 'PINGÜINOS'), isTrue);
+    });
+
+    test('a totally missing/empty blob yields defaults, not a crash', () {
+      final restored = GameSettings.fromJson(<String, dynamic>{});
+      expect(restored.home.name, isNotEmpty);
+      expect(restored.away.name, isNotEmpty);
+      expect(restored.periodCount, greaterThan(0));
+    });
   });
 }

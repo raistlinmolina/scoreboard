@@ -149,27 +149,46 @@ class GameSettings {
     'teamLibrary': teamLibrary.map((t) => t.toJson()).toList(),
   };
 
-  factory GameSettings.fromJson(Map<String, dynamic> json) => GameSettings(
-    home: Team.fromJson((json['home'] as Map).cast<String, dynamic>()),
-    away: Team.fromJson((json['away'] as Map).cast<String, dynamic>()),
-    periodCount: (json['periodCount'] as num?)?.toInt() ?? 2,
-    periodMinutes: (json['periodMinutes'] as num?)?.toInt() ?? 20,
-    // Prefer the new seconds-based key; migrate from the old minutes-based key
-    // if present (older saved settings).
-    penaltyPresetsSeconds: _readPresets(json),
-    maxPenaltiesPerTeam: (json['maxPenaltiesPerTeam'] as num?)?.toInt() ?? 4,
-    hornOnPeriodEnd: json['hornOnPeriodEnd'] as bool? ?? true,
-    clockFontScale: (json['clockFontScale'] as num?)?.toDouble() ?? 1.0,
-    scoreFontScale: (json['scoreFontScale'] as num?)?.toDouble() ?? 1.0,
-    colors: json['colors'] == null
-        ? ScoreboardColors.defaults()
-        : ScoreboardColors.fromJson(
-            (json['colors'] as Map).cast<String, dynamic>(),
-          ),
-    teamLibrary: ((json['teamLibrary'] as List<dynamic>?) ?? [])
-        .map((e) => Team.fromJson((e as Map).cast<String, dynamic>()))
-        .toList(),
-  );
+  factory GameSettings.fromJson(Map<String, dynamic> json) {
+    final d = GameSettings.defaults();
+    Team readTeam(String key, Team fallback) {
+      final v = json[key];
+      if (v is Map) {
+        return Team.fromJson(v.cast<String, dynamic>());
+      }
+      return fallback;
+    }
+
+    return GameSettings(
+      home: readTeam('home', d.home),
+      away: readTeam('away', d.away),
+      periodCount: (json['periodCount'] as num?)?.toInt() ?? d.periodCount,
+      periodMinutes:
+          (json['periodMinutes'] as num?)?.toInt() ?? d.periodMinutes,
+      // Prefer the new seconds-based key; migrate from the old minutes-based
+      // key if present (older saved settings).
+      penaltyPresetsSeconds: _readPresets(json),
+      maxPenaltiesPerTeam:
+          (json['maxPenaltiesPerTeam'] as num?)?.toInt() ??
+          d.maxPenaltiesPerTeam,
+      hornOnPeriodEnd: json['hornOnPeriodEnd'] as bool? ?? d.hornOnPeriodEnd,
+      clockFontScale:
+          (json['clockFontScale'] as num?)?.toDouble() ?? d.clockFontScale,
+      scoreFontScale:
+          (json['scoreFontScale'] as num?)?.toDouble() ?? d.scoreFontScale,
+      colors: json['colors'] is Map
+          ? ScoreboardColors.fromJson(
+              (json['colors'] as Map).cast<String, dynamic>(),
+            )
+          : d.colors,
+      teamLibrary: (json['teamLibrary'] is List)
+          ? (json['teamLibrary'] as List<dynamic>)
+                .whereType<Map>()
+                .map((e) => Team.fromJson(e.cast<String, dynamic>()))
+                .toList()
+          : d.teamLibrary,
+    );
+  }
 
   static List<int> _readPresets(Map<String, dynamic> json) {
     final secs = json['penaltyPresetsSeconds'] as List<dynamic>?;
