@@ -25,8 +25,11 @@ class PenaltyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Soonest-to-expire first.
+    final penalties = [..._penalties]
+      ..sort((a, b) => a.remainingSeconds.compareTo(b.remainingSeconds));
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
@@ -38,18 +41,19 @@ class PenaltyPanel extends StatelessWidget {
           _header(context),
           const SizedBox(height: 4),
           Expanded(
-            child: _penalties.isEmpty
+            child: penalties.isEmpty
                 ? const Center(
                     child: Text(
                       'No penalties',
                       style: TextStyle(color: Colors.white38),
                     ),
                   )
+                // Vertical list, soonest-to-expire at the top. Scrolls if more
+                // penalties than fit; at least ~2 are visible in the strip.
                 : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _penalties.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, i) => _penaltyTile(_penalties[i]),
+                    itemCount: penalties.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 6),
+                    itemBuilder: (context, i) => _penaltyTile(penalties[i]),
                   ),
           ),
         ],
@@ -94,44 +98,41 @@ class PenaltyPanel extends StatelessWidget {
 
   Widget _penaltyTile(Penalty p) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.black26,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: accent.withValues(alpha: 0.25),
-                child: Text(
-                  '#${p.playerNumber}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: accent,
-                  ),
-                ),
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: accent.withValues(alpha: 0.25),
+            child: Text(
+              '#${p.playerNumber}',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: accent,
               ),
-              IconButton(
-                tooltip: 'Clear this penalty',
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: () => controller.clearPenalty(side, p),
-              ),
-            ],
-          ),
-          Text(
-            p.display,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
             ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              p.display,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Clear this penalty',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () => controller.clearPenalty(side, p),
           ),
         ],
       ),

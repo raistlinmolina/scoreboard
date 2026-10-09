@@ -83,7 +83,7 @@ class _ScoreboardScreenState extends State<ScoreboardScreen> {
                   children: [
                     // --- TOP: scores + clock ---
                     Expanded(
-                      flex: 3,
+                      flex: 2,
                       child: Row(
                         children: [
                           Expanded(
@@ -222,43 +222,101 @@ class _ScoreboardScreenState extends State<ScoreboardScreen> {
           ),
         ),
 
-        // --- Clock adjust (when stopped) ---
-        if (!controller.isRunning)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _adjustChip('-1:00', () => controller.adjustClock(-60)),
-              _adjustChip('-0:01', () => controller.adjustClock(-1)),
-              _adjustChip('+0:01', () => controller.adjustClock(1)),
-              _adjustChip('+1:00', () => controller.adjustClock(60)),
-            ],
-          ),
         const SizedBox(height: 8),
 
-        // --- Start/stop (big, easy) ---
-        SizedBox(
-          width: double.infinity,
-          height: 72,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  controller.isRunning ? Colors.redAccent : Colors.green,
-              foregroundColor: Colors.white,
-              textStyle: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
+        // --- Controls: compact Start/Stop + Edit (time) ---
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 48,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      controller.isRunning ? Colors.redAccent : Colors.green,
+                  foregroundColor: Colors.white,
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onPressed: controller.startStop,
+                icon: Icon(
+                  controller.isRunning ? Icons.pause : Icons.play_arrow,
+                  size: 22,
+                ),
+                label: Text(controller.isRunning ? 'STOP' : 'START'),
               ),
             ),
-            onPressed: controller.startStop,
-            icon: Icon(
-              controller.isRunning ? Icons.pause : Icons.play_arrow,
-              size: 32,
+            const SizedBox(width: 12),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: controller.isRunning
+                    ? null
+                    : () => _showEditClock(context),
+                icon: const Icon(Icons.edit, size: 20),
+                label: const Text('Edit'),
+              ),
             ),
-            label: Text(controller.isRunning ? 'STOP' : 'START'),
-          ),
+          ],
         ),
       ],
     );
+  }
+
+  /// Dialog to freely edit the clock as mm:ss (only when stopped).
+  Future<void> _showEditClock(BuildContext context) async {
+    final current = controller.remainingSeconds;
+    final text = '${current ~/ 60}:${(current % 60).toString().padLeft(2, '0')}';
+    final ctrl = TextEditingController(text: text);
+    final result = await showDialog<int>(
+      context: context,
+      builder: (dctx) => AlertDialog(
+        title: const Text('Set time'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          keyboardType: TextInputType.datetime,
+          decoration: const InputDecoration(
+            labelText: 'Time (m:ss or seconds)',
+            hintText: 'e.g. 12:00 or 90',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final secs = _parseClock(ctrl.text);
+              Navigator.pop(dctx, secs);
+            },
+            child: const Text('Set'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) controller.setClock(result);
+  }
+
+  /// Parses "m:ss", "mm:ss" or a plain seconds count into total seconds.
+  /// Returns 0 if unparseable (so the clock just goes to 0:00).
+  int _parseClock(String raw) {
+    final t = raw.trim();
+    if (t.isEmpty) return 0;
+    if (t.contains(':')) {
+      final parts = t.split(':');
+      if (parts.length == 2) {
+        final m = int.tryParse(parts[0].trim()) ?? 0;
+        final s = int.tryParse(parts[1].trim()) ?? 0;
+        return (m * 60 + s).clamp(0, 24 * 3600);
+      }
+      return 0;
+    }
+    return (int.tryParse(t) ?? 0).clamp(0, 24 * 3600);
   }
 
   Widget _periodControl() {
@@ -290,13 +348,6 @@ class _ScoreboardScreenState extends State<ScoreboardScreen> {
           onPressed: controller.nextPeriod,
         ),
       ],
-    );
-  }
-
-  Widget _adjustChip(String label, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: ActionChip(label: Text(label), onPressed: onTap),
     );
   }
 

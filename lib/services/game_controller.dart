@@ -133,6 +133,14 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set the clock directly to [seconds] (free edit). Clamped to >= 0. Only
+  /// applies when stopped so you can't edit a running clock out from under it.
+  void setClock(int seconds) {
+    if (_running) return;
+    _remainingSeconds = seconds < 0 ? 0 : seconds;
+    notifyListeners();
+  }
+
   // ---------------- Scores ----------------
 
   void addGoal(TeamSide side, {bool withHorn = false}) {
