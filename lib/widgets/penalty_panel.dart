@@ -28,6 +28,26 @@ class PenaltyPanel extends StatelessWidget {
     // Soonest-to-expire first.
     final penalties = [..._penalties]
       ..sort((a, b) => a.remainingSeconds.compareTo(b.remainingSeconds));
+    // Away buttons on the right, home on the left, so controls sit on the
+    // outer edges and the penalty list faces the center clock.
+    final buttonsFirst = side == TeamSide.home;
+    final buttons = _buttonColumn(context);
+    final list = Expanded(
+      child: penalties.isEmpty
+          ? const Center(
+              child: Text(
+                'No penalties',
+                style: TextStyle(color: Colors.white38),
+              ),
+            )
+          // Vertical list, soonest-to-expire at the top. Scrolls if more
+          // penalties than fit; the whole box width is available for rows.
+          : ListView.separated(
+              itemCount: penalties.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 6),
+              itemBuilder: (context, i) => _penaltyTile(penalties[i]),
+            ),
+    );
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -35,62 +55,33 @@ class PenaltyPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: accent.withValues(alpha: 0.3), width: 2),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _header(context),
-          const SizedBox(height: 4),
-          Expanded(
-            child: penalties.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No penalties',
-                      style: TextStyle(color: Colors.white38),
-                    ),
-                  )
-                // Vertical list, soonest-to-expire at the top. Scrolls if more
-                // penalties than fit; at least ~2 are visible in the strip.
-                : ListView.separated(
-                    itemCount: penalties.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 6),
-                    itemBuilder: (context, i) => _penaltyTile(penalties[i]),
-                  ),
-          ),
-        ],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: buttonsFirst
+            ? [buttons, const SizedBox(width: 10), list]
+            : [list, const SizedBox(width: 10), buttons],
       ),
     );
   }
 
-  Widget _header(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  /// Compact vertical Add / Clear controls (no title), so the full width of the
+  /// box is free for penalty rows.
+  Widget _buttonColumn(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Flexible(
-          child: Text(
-            '${_team.name} — PENALTIES',
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              color: accent,
-            ),
-          ),
+        IconButton.filledTonal(
+          tooltip: 'Add penalty',
+          onPressed: () => _showAddPenalty(context),
+          icon: const Icon(Icons.add),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextButton.icon(
-              onPressed: () => _showAddPenalty(context),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Add'),
-            ),
-            if (_penalties.isNotEmpty)
-              TextButton.icon(
-                onPressed: () => controller.clearAllPenalties(side),
-                icon: const Icon(Icons.clear_all, size: 18),
-                label: const Text('Clear'),
-              ),
-          ],
+        const SizedBox(height: 8),
+        IconButton.filledTonal(
+          tooltip: 'Clear all penalties',
+          onPressed: _penalties.isEmpty
+              ? null
+              : () => controller.clearAllPenalties(side),
+          icon: const Icon(Icons.clear_all),
         ),
       ],
     );
